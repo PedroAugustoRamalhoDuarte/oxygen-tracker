@@ -1,0 +1,3 @@
+rootProject.name = "Oxygen Measurement"
+include ':app'
+include ':opencv'
