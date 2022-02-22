@@ -19,9 +19,11 @@ import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
+import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.imgproc.Imgproc;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -68,8 +70,10 @@ public class OpencvCamera extends Activity implements CameraBridgeViewBase.CvCam
             public void onClick(View view) {
                 Mat mInter = new Mat(mRGBA.width(), mRGBA.height(), CvType.CV_8UC4);
 
+                Core.flip(mRGBA.t(), mRGBA, 1);
+                Imgproc.cvtColor(mRGBA, mInter, Imgproc.COLOR_RGBA2BGR, 3);
+
                 File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
-                Log.i(TAG, String.valueOf(path));
                 String filename = "temp.jpg";
                 File file = new File(path, filename);
                 boolean bool;
@@ -84,7 +88,6 @@ public class OpencvCamera extends Activity implements CameraBridgeViewBase.CvCam
                 try {
                     MediaStore.Images.Media.insertImage(getContentResolver(), String.valueOf(mInter), "Title" , "Desc");
                 } catch (FileNotFoundException e) {
-                    Log.i(TAG, "ALOHA2");
                     e.printStackTrace();
                 }
             }
