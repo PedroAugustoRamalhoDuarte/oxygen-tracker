@@ -8,7 +8,7 @@ android {
 
     defaultConfig {
         applicationId "com.example.oxygenmeasurement"
-        minSdkVersion 30
+        minSdkVersion 28
         targetSdkVersion 30 // Changes to 31 fail
         versionCode 1
         versionName "1.0"
