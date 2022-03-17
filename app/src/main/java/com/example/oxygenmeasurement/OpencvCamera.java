@@ -1,6 +1,7 @@
 package com.example.oxygenmeasurement;
 
 import static org.opencv.core.Core.absdiff;
+import static org.opencv.core.Core.flip;
 import static org.opencv.core.Core.split;
 
 import androidx.annotation.NonNull;
@@ -39,7 +40,6 @@ import java.util.List;
 public class OpencvCamera extends Activity implements CameraBridgeViewBase.CvCameraViewListener2 {
     private static final String TAG = "MainActivity";
     Mat mRGBA;
-    Mat mRGBAT;
     Mat mROI = new Mat();
     List<Mat> videoFrames = new ArrayList<Mat>();
     List<Mat> videoFramesBlue = new ArrayList<Mat>();
@@ -66,6 +66,7 @@ public class OpencvCamera extends Activity implements CameraBridgeViewBase.CvCam
 
 
     Button btn_take_picture;
+    Button btn_show_video;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,14 +77,24 @@ public class OpencvCamera extends Activity implements CameraBridgeViewBase.CvCam
         cameraBridgeViewBase.setVisibility(SurfaceView.VISIBLE);
         cameraBridgeViewBase.setCvCameraViewListener(this);
 
+        btn_show_video = findViewById(R.id.btn_show_video);
+        btn_show_video.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
 
+            }
+        });
         // Button
         btn_take_picture = findViewById(R.id.btn_take_picture);
         btn_take_picture.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 isRecording = !isRecording;
-                btn_take_picture.setText("Parar gravação");
+                if (isRecording) {
+                    btn_take_picture.setText("Parar gravação");
+                } else {
+                    btn_take_picture.setText("Gravar");
+                }
 //                Mat mInter = new Mat(mRGBA.width(), mRGBA.height(), CvType.CV_8UC4);
 //
 //                Core.flip(mRGBA.t(), mRGBA, 1);
@@ -163,41 +174,34 @@ public class OpencvCamera extends Activity implements CameraBridgeViewBase.CvCam
     @Override
     public void onCameraViewStarted(int width, int height) {
         mRGBA = new Mat(height, width, CvType.CV_8UC4);
-        mRGBAT = new Mat(height, width, CvType.CV_8UC4);
     }
 
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
-        mRGBA = inputFrame.rgba();
-        mRGBAT = inputFrame.gray();
 
+        mRGBA = inputFrame.rgba();
+        Mat mRGBAT = mRGBA.t();
+        Core.flip(mRGBA.t(), mRGBAT, 1);
+        Imgproc.resize(mRGBAT, mRGBAT, mRGBA.size());
 
         // ROI
-        int h = mRGBA.width();
-        int w = mRGBA.height();
+        int h = mRGBAT.width();
+        int w = mRGBAT.height();
         int h_rect = h / 4;
         int w_rect = w * 3 / 4;
-        int rowStart = (h - h_rect) / 3;
-        int rowEnd = (w - w_rect) / 2;
-        int colStart = (h + h_rect) / 3;
-        int colEnd = (w + w_rect) / 2;
+        int xStart = (w - w_rect + 150) / 2;
+        int yStart = (h - h_rect - 200) / 3;
+        int xEnd = (w + w_rect + 150) / 2;
+        int yEnd = (h + h_rect - 100) / 3;
 
         // Draw rectangle
-        Imgproc.rectangle(mRGBA, new Point
-                (rowStart, rowEnd), new Point(
-                colStart, colEnd), new Scalar(255, 0, 0), 5);
-
-
-        Log.i(TAG, "----------------------");
-        Log.i(TAG, String.valueOf(colStart));
-        Log.i(TAG, String.valueOf(colEnd));
-        Log.i(TAG, String.valueOf(rowStart));
-        Log.i(TAG, String.valueOf(rowEnd));
-        Log.i(TAG, "----------------------");
+        Imgproc.rectangle(mRGBAT, new Point
+                (xStart, yStart), new Point(
+                xEnd, yEnd), new Scalar(255, 0, 0), 5);
 
         if (isRecording) {
             // Extract ROI
-            mROI = mRGBA.submat(colStart, colEnd, rowStart, rowEnd);
+            mROI = mRGBAT.submat(yStart, yEnd, xStart, xEnd);
 
             int size = videoFrames.size();
             if (size > 1) {
@@ -207,15 +211,18 @@ public class OpencvCamera extends Activity implements CameraBridgeViewBase.CvCam
 
                 split(buffer, channels);
 
-                videoFramesBlue.add(channels.get(0));
-                videoFramesRed.add(channels.get(2));
+                videoFramesBlue.add(channels.get(0).clone());
+                videoFramesRed.add(channels.get(2).clone());
 
                 Log.i(TAG, String.valueOf(videoFramesRed));
             }
-            videoFrames.add(mROI);
+            videoFrames.add(mROI.clone());
+
         }
 
         Log.i(TAG, Integer.toString(videoFrames.size()));
-        return mRGBA;
+
+        return mRGBAT;
     }
 }
+
