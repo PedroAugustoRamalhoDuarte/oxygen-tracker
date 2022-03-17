@@ -21,7 +21,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.OxygenMeasurement">
         <activity android:name=".OpencvCamera"
-            android:screenOrientation="landscape"
+            android:screenOrientation="portrait"
             android:exported="true"/>
         <activity android:name=".MainActivity">
             <intent-filter>
