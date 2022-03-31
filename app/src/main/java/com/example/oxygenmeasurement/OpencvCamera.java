@@ -9,6 +9,7 @@ import androidx.core.app.ActivityCompat;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -26,14 +27,18 @@ import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfRect;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
+import org.opencv.objdetect.CascadeClassifier;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,6 +49,8 @@ public class OpencvCamera extends Activity implements CameraBridgeViewBase.CvCam
     List<Mat> videoFrames = new ArrayList<Mat>();
     List<Mat> videoFramesBlue = new ArrayList<Mat>();
     List<Mat> videoFramesRed = new ArrayList<Mat>();
+    private CascadeClassifier faceDetector = new CascadeClassifier();
+    private File mCascadeFile;
 
     boolean isRecording = false;
     CameraBridgeViewBase cameraBridgeViewBase;
@@ -63,6 +70,27 @@ public class OpencvCamera extends Activity implements CameraBridgeViewBase.CvCam
             super.onManagerConnected(status);
         }
     };
+
+    private void loadHaarCascadeFile() {
+        try {
+            File cascadeDir = getDir("haarcascade_frontalface_alt", Context.MODE_PRIVATE);
+            mCascadeFile = new File(cascadeDir, "haarcascade_frontalface_alt.xml");
+
+            if (!mCascadeFile.exists()) {
+                FileOutputStream os = new FileOutputStream(mCascadeFile);
+                InputStream is = getResources().openRawResource(R.raw.haarcascade_frontalface_alt);
+                byte[] buffer = new byte[4096];
+                int bytesRead;
+                while ((bytesRead = is.read(buffer)) != -1) {
+                    os.write(buffer, 0, bytesRead);
+                }
+                is.close();
+                os.close();
+            }
+        } catch (Throwable throwable) {
+            throw new RuntimeException("Failed to load Haar Cascade file");
+        }
+    }
 
 
     Button btn_take_picture;
@@ -180,9 +208,22 @@ public class OpencvCamera extends Activity implements CameraBridgeViewBase.CvCam
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
 
         mRGBA = inputFrame.rgba();
-        Mat mRGBAT = mRGBA.t();
-        Core.flip(mRGBA.t(), mRGBAT, 1);
-        Imgproc.resize(mRGBAT, mRGBAT, mRGBA.size());
+        Mat mRGBAT = mRGBA;
+//        Mat mRGBAT = mRGBA.t();
+//        Core.flip(mRGBA.t(), mRGBAT, 1);
+//        Imgproc.resize(mRGBAT, mRGBAT, mRGBA.size());
+
+        MatOfRect faceDetections = new MatOfRect();
+        faceDetector.detectMultiScale(mRGBAT, faceDetections);
+
+        for (Rect rect : faceDetections.toArray()) {
+            Imgproc.rectangle(
+                    mRGBAT, new Point(rect.x, rect.y),
+                    new Point(rect.x, rect.y),
+                    new Scalar(0, 0, 255), 3);
+
+        }
+
 
         // ROI
         int h = mRGBAT.width();
