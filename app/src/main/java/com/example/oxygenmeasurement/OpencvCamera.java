@@ -20,6 +20,7 @@ import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
+import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
@@ -215,14 +216,20 @@ public class OpencvCamera extends Activity implements CameraBridgeViewBase.CvCam
 
             int size = videoFrames.size();
             if (size > 1) {
+
                 Mat buffer = new Mat();
+                Mat result = new Mat();
+
+
                 List<Mat> channels = new ArrayList<Mat>();
                 absdiff(mROI, videoFrames.get(size - 1), buffer);
 
                 split(buffer, channels);
 
-                videoFramesBlue.add(channels.get(0).clone());
-                videoFramesRed.add(channels.get(2).clone());
+                Core.dct(channels.get(0).clone(), result);
+                videoFramesBlue.add(result);
+                Core.dct(channels.get(2).clone(), result);
+                videoFramesRed.add(result);
 
                 File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
                 String filename = "temp.jpg";
