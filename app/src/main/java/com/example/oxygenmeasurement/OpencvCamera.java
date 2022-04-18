@@ -27,10 +27,12 @@ import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
+import com.example.oxygenmeasurement.ZigZag;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+
 
 public class OpencvCamera extends Activity implements CameraBridgeViewBase.CvCameraViewListener2 {
     private static final String TAG = "MainActivity";
@@ -168,7 +170,7 @@ public class OpencvCamera extends Activity implements CameraBridgeViewBase.CvCam
 
     @Override
     public void onCameraViewStarted(int width, int height) {
-        mRGBA = new Mat(height, width, CvType.CV_8UC4);
+        mRGBA = new Mat(height, width, CvType.CV_64FC1);
     }
 
     @Override
@@ -218,7 +220,10 @@ public class OpencvCamera extends Activity implements CameraBridgeViewBase.CvCam
             if (size > 1) {
 
                 Mat buffer = new Mat();
-                Mat result = new Mat();
+                Mat resultRed = new Mat();
+                ArrayList<Integer> arrayRed = new ArrayList<Integer>();
+                Mat resultBlue = new Mat(w, h, CvType.CV_8UC4);
+                ArrayList<Integer> arrayBlue = new ArrayList<Integer>();
 
 
                 List<Mat> channels = new ArrayList<Mat>();
@@ -226,10 +231,17 @@ public class OpencvCamera extends Activity implements CameraBridgeViewBase.CvCam
 
                 split(buffer, channels);
 
-                Core.dct(channels.get(0).clone(), result);
-                videoFramesBlue.add(result);
-                Core.dct(channels.get(2).clone(), result);
-                videoFramesRed.add(result);
+                Log.i(TAG, channels.get(0).clone().toString());
+                Log.i(TAG, channels.get(0).clone().getClass().toString());
+
+                resultBlue = channels.get(0).clone();
+                Core.dct(channels.get(0).clone(), resultBlue);
+//                videoFramesBlue.add(resultBlue);
+                //Core.dct(channels.get(2).clone(), resultRed);
+                //videoFramesRed.add(resultRed);
+
+                //ZigZag.Calculate(resultRed, resultRed.rows(), resultRed.cols(), arrayRed);
+                //Log.i(TAG, arrayRed.toString());
 
                 File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
                 String filename = "temp.jpg";
