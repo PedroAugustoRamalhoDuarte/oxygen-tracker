@@ -5,6 +5,7 @@ package com.example.oxygenmeasurement;
 import org.opencv.core.Mat;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 public class ZigZag {
     /* Java Program to print matrix in Zig-zag pattern*/
@@ -13,8 +14,7 @@ public class ZigZag {
     // in zig-zag form
     static void Calculate(Mat arr, int n, int m, ArrayList<Integer> result) {
         int row = 0, col = 0;
-
-
+        double[] temp = new double[1];
         // Boolean variable that will true if we
         // need to increment 'row' value otherwise
         // false- if increment 'col' value
@@ -24,7 +24,8 @@ public class ZigZag {
         int mn = Math.min(m, n);
         for (int len = 1; len <= mn; ++len) {
             for (int i = 0; i < len; ++i) {
-                //result.add(arr.get(row,col));
+                arr.get(row,col, temp);
+                result.add((int)temp[0]);
 
                 if (i + 1 == len)
                     break;
@@ -80,7 +81,8 @@ public class ZigZag {
                 len = diag;
 
             for (int i = 0; i < len; ++i) {
-                // result.add(arr.get(row,col));
+                arr.get(row,col, temp);
+                result.add((int)temp[0]);
 
                 if (i + 1 == len)
                     break;
@@ -113,6 +115,23 @@ public class ZigZag {
                 row_inc = false;
             }
         }
+    }
+
+    static int GetR(ArrayList<Integer> result) {
+        int size = (int)(result.size()*0.8); // Exclude the 20% tail
+        if (size == 0) {
+            return 0;
+        }
+        int majorPeaks = 0;
+        int majorPeak = Collections.max(result);
+        for(int i=0; i < size; i = i+8) {
+            majorPeaks += Collections.max(result.subList(i, i+8));
+        }
+        int mean = (majorPeaks/size);
+        if (mean == 0) {
+            mean = 1;
+        }
+        return majorPeak/mean;
     }
 
 }

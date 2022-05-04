@@ -2,6 +2,8 @@ package com.example.oxygenmeasurement;
 
 import static org.opencv.core.Core.absdiff;
 import static org.opencv.core.Core.split;
+import static org.opencv.core.CvType.CV_32FC1;
+import static org.opencv.core.CvType.CV_64FC1;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
@@ -220,28 +222,42 @@ public class OpencvCamera extends Activity implements CameraBridgeViewBase.CvCam
             if (size > 1) {
 
                 Mat buffer = new Mat();
-                Mat resultRed = new Mat();
+                Mat resultRed = new Mat(w, h, CvType.CV_32FC1);
                 ArrayList<Integer> arrayRed = new ArrayList<Integer>();
-                Mat resultBlue = new Mat(w, h, CvType.CV_8UC4);
+                Mat resultBlue = new Mat(w, h, CvType.CV_32FC1);
                 ArrayList<Integer> arrayBlue = new ArrayList<Integer>();
 
-
-                List<Mat> channels = new ArrayList<Mat>();
+                List<Mat> channels = new ArrayList<Mat>(3);
                 absdiff(mROI, videoFrames.get(size - 1), buffer);
 
-                split(buffer, channels);
+                Core.split(buffer, channels);
 
-                Log.i(TAG, channels.get(0).clone().toString());
-                Log.i(TAG, channels.get(0).clone().getClass().toString());
+                Mat auxBlue = channels.get(0);
+                Mat auxRed = channels.get(2);
+                auxBlue.convertTo(auxBlue, CvType.CV_64FC1);
+                auxRed.convertTo(auxRed, CvType.CV_64FC1);
 
-                resultBlue = channels.get(0).clone();
-                Core.dct(channels.get(0).clone(), resultBlue);
-//                videoFramesBlue.add(resultBlue);
-                //Core.dct(channels.get(2).clone(), resultRed);
-                //videoFramesRed.add(resultRed);
+                resultBlue = auxBlue;
+                resultRed = auxRed;
 
-                //ZigZag.Calculate(resultRed, resultRed.rows(), resultRed.cols(), arrayRed);
-                //Log.i(TAG, arrayRed.toString());
+                Core.dct(resultBlue, resultBlue);
+                Core.dct(resultRed, resultRed);
+
+
+                ZigZag.Calculate(resultBlue, resultBlue.rows(), resultBlue.cols(), arrayBlue);
+                ZigZag.Calculate(resultRed, resultRed.rows(), resultRed.cols(), arrayRed);
+
+                int rBlue = ZigZag.GetR(arrayBlue);
+                int rRed = ZigZag.GetR(arrayRed);
+                double mean = 0;
+                if(rBlue != 0) {
+                    mean = rRed/(double)rBlue;
+                }
+                Log.i(TAG, "PEAK Blue: "+Integer.toString(rBlue));
+                Log.i(TAG, "PEAK Red: "+Integer.toString(rRed));
+                Log.i(TAG, "PEAK Mean: "+Double.toString(mean));
+                Log.i(TAG, "RESULT FINAL: "+Double.toString(100-mean*0.015));
+
 
                 File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
                 String filename = "temp.jpg";
