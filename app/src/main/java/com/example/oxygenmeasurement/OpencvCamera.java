@@ -17,6 +17,7 @@ import android.util.Log;
 import android.view.SurfaceView;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
@@ -41,8 +42,6 @@ public class OpencvCamera extends Activity implements CameraBridgeViewBase.CvCam
     Mat mRGBA;
     Mat mROI = new Mat();
     List<Mat> videoFrames = new ArrayList<Mat>();
-    List<Mat> videoFramesBlue = new ArrayList<Mat>();
-    List<Mat> videoFramesRed = new ArrayList<Mat>();
 
     boolean isRecording = false;
     CameraBridgeViewBase cameraBridgeViewBase;
@@ -63,9 +62,17 @@ public class OpencvCamera extends Activity implements CameraBridgeViewBase.CvCam
         }
     };
 
+    private void setText(final TextView text,final String value){
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                text.setText(value);
+            }
+        });
+    }
 
     Button btn_take_picture;
-    Button btn_show_video;
+    TextView sat02View;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,15 +83,9 @@ public class OpencvCamera extends Activity implements CameraBridgeViewBase.CvCam
         cameraBridgeViewBase.setVisibility(SurfaceView.VISIBLE);
         cameraBridgeViewBase.setCvCameraViewListener(this);
 
-        btn_show_video = findViewById(R.id.btn_show_video);
-        btn_show_video.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-            }
-        });
         // Button
         btn_take_picture = findViewById(R.id.btn_take_picture);
+        sat02View = (TextView)findViewById(R.id.SatO2);
         btn_take_picture.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -94,29 +95,7 @@ public class OpencvCamera extends Activity implements CameraBridgeViewBase.CvCam
                 } else {
                     btn_take_picture.setText("Gravar");
                 }
-//                Mat mInter = new Mat(mRGBA.width(), mRGBA.height(), CvType.CV_8UC4);
-//
-//                Core.flip(mRGBA.t(), mRGBA, 1);
-//                Imgproc.cvtColor(mRGBA, mInter, Imgproc.COLOR_RGBA2BGR, 3);
-//
-//                videoFrames.put(mInter);
-//                File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
-//                String filename = "temp.jpg";
-//                File file = new File(path, filename);
-//                boolean bool;
-//                filename = file.toString();
-//                bool = Imgcodecs.imwrite(filename, mInter);
-//                if (bool)
-//                    Log.i(TAG, "SUCCESS writing image to external storage");
-//                else
-//                    Log.i(TAG, "Fail writing image to external storage");
-//
-//                // Does not work
-//                try {
-//                    MediaStore.Images.Media.insertImage(getContentResolver(), String.valueOf(mInter), "Title", "Desc");
-//                } catch (FileNotFoundException e) {
-//                    e.printStackTrace();
-//                }
+
             }
         });
     }
@@ -249,14 +228,18 @@ public class OpencvCamera extends Activity implements CameraBridgeViewBase.CvCam
 
                 int rBlue = ZigZag.GetR(arrayBlue);
                 int rRed = ZigZag.GetR(arrayRed);
-                double mean = 0;
+                double mean = 0, sato2 = 0;
                 if(rBlue != 0) {
                     mean = rRed/(double)rBlue;
                 }
+                sato2 = 100-mean*0.015;
                 Log.i(TAG, "PEAK Blue: "+Integer.toString(rBlue));
                 Log.i(TAG, "PEAK Red: "+Integer.toString(rRed));
                 Log.i(TAG, "PEAK Mean: "+Double.toString(mean));
-                Log.i(TAG, "RESULT FINAL: "+Double.toString(100-mean*0.015));
+                Log.i(TAG, "RESULT FINAL: "+Double.toString(sato2));
+
+                setText(sat02View, "SatO2: " + Double.toString(sato2));
+
 
 
                 File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
@@ -270,7 +253,6 @@ public class OpencvCamera extends Activity implements CameraBridgeViewBase.CvCam
                 else
                     Log.i(TAG, "Fail writing image to external storage");
 
-                Log.i(TAG, String.valueOf(videoFramesRed));
             }
             videoFrames.add(mROI.clone());
 

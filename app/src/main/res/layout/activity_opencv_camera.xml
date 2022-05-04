@@ -24,14 +24,14 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <Button
-        android:id="@+id/btn_show_video"
+    <TextView
+        android:id="@+id/SatO2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="120dp"
-        android:layout_marginTop="16dp"
-        android:text="Video"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:text="SatO2"
+        tools:layout_editor_absoluteX="30dp"
+        android:textColor="@color/white"
+        tools:layout_editor_absoluteY="72dp"
+        tools:ignore="MissingConstraints" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

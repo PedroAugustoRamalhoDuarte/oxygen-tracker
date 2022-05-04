@@ -14,4 +14,5 @@
         android:id="@+id/open_camera"
         android:text="Camera"
         tools:ignore="HardcodedText" />
+
 </LinearLayout>
